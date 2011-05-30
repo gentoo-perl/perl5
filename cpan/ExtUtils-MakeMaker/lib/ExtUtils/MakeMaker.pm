@@ -1774,6 +1774,10 @@ currently used by MakeMaker but may be handy in Makefile.PLs.
 String that will be included in the compiler call command line between
 the arguments INC and OPTIMIZE.
 
+The default value is taken from $Config{ccflags}. When overriding
+CCFLAGS, make sure to include the $Config{ccflags} settings to avoid
+binary incompatibilities.
+
 =item CONFIG
 
 Arrayref. E.g. [qw(archname manext)] defines ARCHNAME & MANEXT from
