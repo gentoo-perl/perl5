@@ -4518,6 +4518,9 @@ S_init_perllib(pTHX)
 		      INCPUSH_ADD_SUB_DIRS|INCPUSH_CAN_RELOCATE);
 #endif
 
+    /* for configuration where /usr is mounted ro (CPAN::Config, Net::Config) */
+    S_incpush_use_sep(aTHX_ STR_WITH_LEN("/etc/perl"), 0x0);
+
 #ifdef SITEARCH_EXP
     /* sitearch is always relative to sitelib on Windows for
      * DLL-based path intuition to work correctly */
@@ -4557,6 +4560,19 @@ S_init_perllib(pTHX)
 	S_incpush_use_sep(aTHX_ STR_WITH_LEN(PERL_VENDORLIB_EXP),
 			  INCPUSH_CAN_RELOCATE);
 #  endif
+#endif
+
+#if defined(SITELIB_STEM) && defined(PERL_INC_VERSION_LIST)
+    /* Search for version-specific dirs below here */
+    S_incpush_use_sep(aTHX_ STR_WITH_LEN(SITELIB_STEM),
+		      INCPUSH_ADD_OLD_VERS|INCPUSH_CAN_RELOCATE);
+#endif
+
+
+#if defined(PERL_VENDORLIB_STEM) && defined(PERL_INC_VERSION_LIST)
+    /* Search for version-specific dirs below here */
+    S_incpush_use_sep(aTHX_ STR_WITH_LEN(PERL_VENDORLIB_STEM),
+		      INCPUSH_ADD_OLD_VERS|INCPUSH_CAN_RELOCATE);
 #endif
 
 #ifdef ARCHLIB_EXP
@@ -4620,19 +4636,6 @@ S_init_perllib(pTHX)
 #ifdef APPLLIB_EXP
     S_incpush_use_sep(aTHX_ STR_WITH_LEN(APPLLIB_EXP), INCPUSH_ADD_OLD_VERS
 		      |INCPUSH_NOT_BASEDIR|INCPUSH_CAN_RELOCATE);
-#endif
-
-#if defined(SITELIB_STEM) && defined(PERL_INC_VERSION_LIST)
-    /* Search for version-specific dirs below here */
-    S_incpush_use_sep(aTHX_ STR_WITH_LEN(SITELIB_STEM),
-		      INCPUSH_ADD_OLD_VERS|INCPUSH_CAN_RELOCATE);
-#endif
-
-
-#if defined(PERL_VENDORLIB_STEM) && defined(PERL_INC_VERSION_LIST)
-    /* Search for version-specific dirs below here */
-    S_incpush_use_sep(aTHX_ STR_WITH_LEN(PERL_VENDORLIB_STEM),
-		      INCPUSH_ADD_OLD_VERS|INCPUSH_CAN_RELOCATE);
 #endif
 
 #ifdef PERL_OTHERLIBDIRS
