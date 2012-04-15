@@ -190,7 +190,7 @@ case "$ccisgcc" in
     $define|true|[Yy])
 	echo '#include <stdio.h>\nint main(){long l;printf("%d\\n",sizeof(l));}'>try.c
 	$cc -o try $ccflags $ldflags try.c
-	if [ "`try`" = "8" ]; then
+	if [ "`./try`" = "8" ]; then
 	    case "$use64bitall" in
 		$define|true|[Yy]) ;;
 		*)  cat <<EOM >&4
@@ -385,7 +385,7 @@ int main ()
     } /* main */
 EOF
 $cc -o try $ccflags $ldflags try.c
-	maxdsiz=`try`
+	maxdsiz=`./try`
 rm -f try try.c core
 if [ $maxdsiz -le 64 ]; then
     # 64 Mb is probably not enough to optimize toke.c
@@ -412,11 +412,12 @@ case "$ccisgcc" in
 	    "")           optimize="-g -O" ;;
 	    *O[3456789]*) optimize=`echo "$optimize" | sed -e 's/O[3-9]/O2/'` ;;
 	    esac
-	#ld="$cc"
-	ld=/usr/bin/ld
+	ld="$cc"
+	#ld=/usr/bin/ld
 	cccdlflags='-fPIC'
-	#lddlflags='-shared'
-	lddlflags='-b'
+	lddlflags='-shared'
+	#lddlflags='-b'
+	libs='-lm'
 	case "$optimize" in
 	    *-g*-O*|*-O*-g*)
 		# gcc without gas will not accept -g
