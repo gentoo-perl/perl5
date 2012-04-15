@@ -86,12 +86,12 @@ true)
 		;;
 	aix*)
 		case "$cc" in
-		gcc*)
-			shrpldflags="-shared -Wl,-H512 -Wl,-T512 -Wl,-bhalt:4 -Wl,-bM:SRE -Wl,-bE:perl.exp"
+		*gcc*)
+			shrpldflags="-shared -Wl,-H512 -Wl,-T512 -Wl,-bhalt:4 -Wl,-bE:perl.exp"
 			case "$osvers" in
-			3*)	shrpldflags="$shrpldflags -e _nostart"
+			3*)	shrpldflags="$shrpldflags -Wl,-bM:SRE -e _nostart"
 				;;
-			*)	shrpldflags="$shrpldflags -Wl,-bnoentry"
+			*)	shrpldflags="$shrpldflags -Wl,-G -Wl,-bernotok -Wl,-bnoentry"
 				;;
 			esac
 			shrpldflags="$shrpldflags $ldflags $perllibs $cryptlib"
@@ -99,11 +99,11 @@ true)
 			linklibperl_nonshr='-lperl_nonshr'
 			;;
 		*)
-			shrpldflags="-H512 -T512 -bhalt:4 -bM:SRE -bE:perl.exp"
+			shrpldflags="-H512 -T512 -bhalt:4 -bE:perl.exp"
 			case "$osvers" in
-			3*)	shrpldflags="$shrpldflags -e _nostart"
+			3*)	shrpldflags="$shrpldflags -bM:SRE -e _nostart"
 				;;
-			*)	shrpldflags="$shrpldflags -b noentry"
+			*)	shrpldflags="$shrpldflags -G -bernotok -b noentry"
 				;;
 			esac
 			shrpldflags="$shrpldflags $ldflags $perllibs $cryptlib"
@@ -917,11 +917,19 @@ $(LIBPERL): $& $(perllib_dep) $(DYNALOADER) $(LIBPERLEXPORT)
 !NO!SUBS!
 		case "$osname" in
 		aix)
-			$spitshell >>$Makefile <<'!NO!SUBS!'
-	rm -f libperl$(OBJ_EXT)
-	mv $@ libperl$(OBJ_EXT)
-	$(AR) qv $(LIBPERL) libperl$(OBJ_EXT)
-!NO!SUBS!
+			bits=32
+			if test X"$use64bitall" = Xdefine; then bits=64; fi
+			$spitshell >>$Makefile <<!GROK!THIS!
+	rm -f shr.imp shr.o
+	mv \$@ shr.o
+	strip -e shr.o
+	( echo '#! libperl.so.${revision}.${patchlevel}(shr.o)' \\
+	; echo '# ${bits}' \\
+	; grep -v '^#!' perl.exp \\
+	) > shr.imp
+	\$(AR) qv \$@ shr.imp shr.o
+	rm -f shr.imp shr.o
+!GROK!THIS!
 			;;
 		esac
 		;;
