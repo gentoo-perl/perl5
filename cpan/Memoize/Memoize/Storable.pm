@@ -55,7 +55,7 @@ sub DESTROY {
   require Carp if $Verbose;
   my $self= shift;
   print STDERR "Memoize::Storable::DESTROY(@_)\n" if $Verbose;
-  if ($self->{OPTIONS}{'nstore'}) {
+  if (exists $self->{OPTIONS}{'nstore'}) {
     Storable::nstore($self->{H}, $self->{FILENAME});
   } else {
     Storable::store($self->{H}, $self->{FILENAME});
