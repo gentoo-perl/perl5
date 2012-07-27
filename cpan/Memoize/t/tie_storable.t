@@ -31,18 +31,34 @@ if ($@) {
   exit 0;
 }
 
-print "1..4\n";
+print "1..9\n";
 
 $file = "storable$$";
 1 while unlink $file;
 tryout('Memoize::Storable', $file, 1);  # Test 1..4
 1 while unlink $file;
+tryout('Memoize::Storable', $file, 5, 'nstore');  # Test 5..8
+assert_netorder($file, 9);  # Test 9
+1 while unlink $file;
+
+
+sub assert_netorder {
+  my ($file, $testno) = @_;
+
+  my $netorder = Storable::file_magic($file)->{'netorder'};
+  print ($netorder ? "ok $testno\n" : "not ok $testno\n");
+}
 
 sub tryout {
-  my ($tiepack, $file, $testno) = @_;
+  my ($tiepack, $file, $testno, $option) = @_;
 
-  tie my %cache => $tiepack, $file
-    or die $!;
+  if (defined $option) {
+    tie my %cache => $tiepack, $file, $option
+      or die $!;
+  } else {
+    tie my %cache => $tiepack, $file
+      or die $!;
+  }
 
   memoize 'c5', 
   SCALAR_CACHE => [HASH => \%cache],
