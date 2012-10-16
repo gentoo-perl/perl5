@@ -2057,11 +2057,34 @@ sub _print_urllist {
     };
 }
 
+# Debian modification: return true if this directory
+# or the first existing one upwards is writable
+sub _can_write_to_this_or_parent {
+    my ($dir) = @_;
+    my @parts = File::Spec->splitdir($dir);
+    while (@parts) {
+        my $cur = File::Spec->catdir(@parts);
+        return 1 if -w $cur;
+        return 0 if -e _;
+        pop @parts;
+    }
+    return 0;
+}
+
+# Debian specific modification: the site directories don't necessarily
+# exist on the system, but the build systems create them when necessary,
+# so return true if the first existing directory upwards is writable
+#
+# Furthermore, on Debian, only test the site directories
+# (installsite*, expanded to /usr/local/{share,lib}/perl),
+# not the core ones 
+# (install*lib, expanded to /usr/{share,lib}/perl).
+# We pass INSTALLDIRS=site by default to keep CPAN from touching
+# the core directories.
+
 sub _can_write_to_libdirs {
-    return -w $Config{installprivlib}
-        && -w $Config{installarchlib}
-        && -w $Config{installsitelib}
-        && -w $Config{installsitearch}
+    return _can_write_to_this_or_parent($Config{installsitelib})
+        && _can_write_to_this_or_parent($Config{installsitearch})
 }
 
 sub _using_installbase {
