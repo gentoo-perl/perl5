@@ -1392,6 +1392,8 @@ EXTERN_C char *crypt(const char *, const char *);
  */
 
 #if defined(I_SYSMODE)
+#include <sys/stat.h>
+#include <sys/vnode.h>
 #include <sys/mode.h>
 #endif
 
