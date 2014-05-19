@@ -5484,23 +5484,6 @@ default|recommended)
 	# is to add the flag to the flags passed to the compiler at link time,
 	# as that way the compiler can do the right implementation dependant
 	# thing. (NWC)
-	case "$osname" in
-	amigaos) ;; # -fstack-protector builds but doesn't work
-	*)	case "$gccversion" in
-		?*)	set stack-protector-strong -fstack-protector-strong
-			eval $checkccflag
-			case "$dflt" in
-			*-fstack-protector-strong*) ;; # It got added.
-			*) # Try the plain/older -fstack-protector.
-			   set stack-protector -fstack-protector
-			   eval $checkccflag
-			   ;;
-			esac
-			;;
-		esac
-		;;
-	esac
-	;;
 esac
 
 case "$mips_type" in
@@ -5642,21 +5625,6 @@ case "$ldflags" in
 	esac
 	;;
 *) dflt="$ldflags";;
-esac
-# See note above about -fstack-protector
-case "$ccflags" in
-*-fstack-protector-strong*)
-	case "$dflt" in
-	*-fstack-protector-strong*) ;; # Don't add it again
-	*) dflt="$dflt -fstack-protector-strong" ;;
-	esac
-	;;
-*-fstack-protector*)
-	case "$dflt" in
-	*-fstack-protector*) ;; # Don't add it again
-	*) dflt="$dflt -fstack-protector" ;;
-	esac
-	;;
 esac
 
 : Try to guess additional flags to pick up local libraries.
@@ -8609,21 +8577,6 @@ EOM
 
 	case "$dflt" in
 	    ''|' ') dflt='none' ;;
-	esac
-
-	case "$ldflags" in
-	    *-fstack-protector-strong*)
-		case "$dflt" in
-		    *-fstack-protector-strong*) ;; # Don't add it again
-		    *) dflt="$dflt -fstack-protector-strong" ;;
-		esac
-		;;
-	    *-fstack-protector*)
-		case "$dflt" in
-		    *-fstack-protector*) ;; # Don't add it again
-		    *) dflt="$dflt -fstack-protector" ;;
-		esac
-		;;
 	esac
 
 	rp="Any special flags to pass to $ld to create a dynamically loaded library?"
