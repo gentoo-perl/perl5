@@ -68,7 +68,7 @@ true)
 				${api_revision}.${api_version}.${api_subversion} \
 			     -current_version \
 				${revision}.${patchlevel}.${subversion} \
-			     -install_name \$(shrpdir)/\$@"
+			     -install_name \$(shrpdir)/libperl.${revision}.${patchlevel}.dylib"
 		;;
 	cygwin*)
 		shrpldflags="$shrpldflags -Wl,--out-implib=libperl.dll.a -Wl,--image-base,0x52000000"
@@ -76,13 +76,15 @@ true)
 		;;
 	sunos*)
 		linklibperl="-lperl"
+		shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
-	netbsd*|freebsd[234]*|openbsd*|dragonfly*|bitrig*)
+	netbsd*|freebsd*|openbsd*|dragonfly*|bitrig*)
 		linklibperl="-L. -lperl"
+		shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
 	interix*)
 		linklibperl="-L. -lperl"
-		shrpldflags="$shrpldflags -Wl,--image-base,0x57000000"
+		shrpldflags="$shrpldflags -Wl,--image-base,0x57000000 -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
 	aix*)
 		case "$cc" in
@@ -119,6 +121,9 @@ true)
             shrpldflags='-W l,XPLINK,dll'
 	    linklibperl='libperl.x'
 	    DPERL_EXTERNAL_GLOB=''
+	    ;;
+	linux*)
+	    shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 	    ;;
 	esac
 	case "$ldlibpthname" in
