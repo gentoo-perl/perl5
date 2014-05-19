@@ -6,8 +6,6 @@
 cc='gcc'
 cccdlflags="-DPIC $cccdlflags"
 ccdlflags='-Wl,-E'
-ccflags="-D_ALL_SOURCE $ccflags"
-d_poll="$undef"
 ld='gcc'
 lddlflags="-shared $lddlflags"
 rpathflag='-Wl,-R'
@@ -15,6 +13,7 @@ sharpbang='#!'
 usemymalloc='false'
 usenm='false'
 plibpth=''
+firstmakefile=GNUmakefile
 
 case "$plibpth" in
 '') plibpth=`LANG=C LC_ALL=C $cc -print-search-dirs | grep libraries |
