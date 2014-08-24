@@ -2927,7 +2927,7 @@ sub pasthru {
     my($sep) = $Is{VMS} ? ',' : '';
     $sep .= "\\\n\t";
 
-    foreach my $key (qw(LIB LIBPERL_A LINKTYPE OPTIMIZE
+    foreach my $key (qw(LIB LIBPERL_A LINKTYPE OPTIMIZE LD
                      PREFIX INSTALL_BASE)
                  )
     {
