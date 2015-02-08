@@ -271,6 +271,10 @@ When converting POD source from standard input, the name will be set to
 C<STDIN> if this option is not provided.  Providing this option is strongly
 recommended to set a meaningful manual page name.
 
+When converting POD source from standard input, this option is required,
+since there's otherwise no way to know what to use as the name of the
+manual page.
+
 =item B<--nourls>
 
 Normally, LZ<><> formatting codes with a URL but anchor text are formatted
