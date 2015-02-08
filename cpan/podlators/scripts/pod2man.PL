@@ -235,6 +235,10 @@ Note that this option is probably not useful when converting multiple POD
 files at once.  The convention for Unix man pages for commands is for the
 man page title to be in all-uppercase even if the command isn't.
 
+When converting POD source from standard input, this option is required,
+since there's otherwise no way to know what to use as the name of the
+manual page.
+
 =item B<--nourls>
 
 Normally, LZ<><> formatting codes with a URL but anchor text are formatted
