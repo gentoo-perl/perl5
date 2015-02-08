@@ -863,6 +863,17 @@ sub devise_title {
         $name = 'STDIN';
     }
 
+    # If Pod::Parser gave us an IO::File reference as the source file name,
+    # convert that to the empty string as well.  Then, if we don't have a
+    # valid name, emit a warning and convert it to STDIN.
+    if ($name =~ /^IO::File(?:=\w+)\(0x[\da-f]+\)$/i) {
+        $name = '';
+    }
+    if ($name eq '') {
+        $self->whine (1, 'No name given for document');
+        $name = 'STDIN';
+    }
+
     # If the section isn't 3, then the name defaults to just the basename of
     # the file.
     if ($section !~ /^3/) {
@@ -1751,6 +1762,10 @@ being converted unless the manual section is 3, in which case the path is
 parsed to see if it is a Perl module path.  If it is, a path like
 C<.../lib/Pod/Man.pm> is converted into a name like C<Pod::Man>.  This
 option, if given, overrides any automatic determination of the name.
+
+If generating a manual page from standard input, this option is required,
+since there's otherwise no way for Pod::Man to know what to use for the
+manual page name.
 
 If generating a manual page from standard input, this option is required,
 since there's otherwise no way for Pod::Man to know what to use for the
