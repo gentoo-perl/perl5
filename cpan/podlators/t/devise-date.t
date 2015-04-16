@@ -12,4 +12,4 @@ use Pod::Man;
 use POSIX qw(strftime);
 
 my $parser = Pod::Man->new;
-is $parser->devise_date, strftime("%Y-%m-%d", localtime);
+is $parser->devise_date, strftime("%Y-%m-%d", gmtime);
