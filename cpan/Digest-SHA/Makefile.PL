@@ -64,12 +64,6 @@ if ($^O eq 'VMS') {
 	}
 }
 
-	# Enhance performance on Intel when using gcc
-
-if ($Config{archname} =~ /^i[3456]86/ && $Config{ccname} eq 'gcc') {
-	push(@extra, OPTIMIZE => '-O1 -fomit-frame-pointer');
-}
-
 my $fussy = '-Wall -Wextra -Wconversion -Wcast-align -Wpointer-arith ';
 push(@extra, CCFLAGS => $fussy . $Config{ccflags}) if $opt_w;
 
