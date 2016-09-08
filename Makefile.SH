@@ -627,7 +627,7 @@ all: $(FIRSTMAKEFILE) $(MINIPERL_EXE) $(generated_pods) $(private) $(unidatafile
 	@echo " ";
 	@echo "	Everything is up to date. Type '$(MAKE) test' to run test suite."
 
-$(MANIFEST_SRT):	MANIFEST $(PERL_EXE)
+$(MANIFEST_SRT):	MANIFEST $(PERL_EXE) lib/auto/Cwd/Cwd$(DLSUFFIX)
 	@$(RUN_PERL) Porting/manisort -q || (echo "WARNING: re-sorting MANIFEST"; \
 	    $(RUN_PERL) Porting/manisort -q -o MANIFEST; sh -c true)
 	@touch $(MANIFEST_SRT)
