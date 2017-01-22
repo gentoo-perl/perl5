@@ -4,6 +4,11 @@ use strict;
 use warnings;
 
 use Test::More;
+BEGIN {
+  if ( $ENV{NO_GENTOO_NETWORK_TESTS} ) {
+        plan skip_all => "Tests disabled by NO_GENTOO_NETWORK_TESTS";
+  }
+}
 
 use Socket qw(PF_INET6 PF_INET IPPROTO_IPV6 IPV6_V6ONLY);
 use IO::Socket::IP;
