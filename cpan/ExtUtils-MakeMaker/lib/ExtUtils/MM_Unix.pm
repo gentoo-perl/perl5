@@ -2188,16 +2188,6 @@ doc_vendor_install :: all
 
     push @m, q{
 doc_perl_install :: all
-	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
-	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
-	-$(NOECHO) $(DOC_INSTALL) \
-		"Module" "$(NAME)" \
-		"installed into" $(INSTALLPRIVLIB) \
-		LINKTYPE "$(LINKTYPE)" \
-		VERSION "$(VERSION)" \
-		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
-
 doc_site_install :: all
 	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
 	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
@@ -2207,19 +2197,9 @@ doc_site_install :: all
 		LINKTYPE "$(LINKTYPE)" \
 		VERSION "$(VERSION)" \
 		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
+		>> "}.$self->catfile('$(DESTINSTALLSITELIB)','perllocal.pod').q{"
 
 doc_vendor_install :: all
-	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
-	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
-	-$(NOECHO) $(DOC_INSTALL) \
-		"Module" "$(NAME)" \
-		"installed into" $(INSTALLVENDORLIB) \
-		LINKTYPE "$(LINKTYPE)" \
-		VERSION "$(VERSION)" \
-		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
-
 } unless $self->{NO_PERLLOCAL};
 
     push @m, q{
