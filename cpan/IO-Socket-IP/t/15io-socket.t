@@ -4,6 +4,11 @@ use strict;
 use warnings;
 
 use Test::More;
+BEGIN {
+  if ( $ENV{NO_GENTOO_NETWORK_TESTS} ) {
+  	plan skip_all => "Tests disabled by NO_GENTOO_NETWORK_TESTS";
+  }
+}
 
 use IO::Socket;
 use IO::Socket::IP -register;
