@@ -21,7 +21,7 @@ use Test::More
     !MM->can_run(make()) && $ENV{PERL_CORE} && $Config{'usecrosscompile'}
     ? (skip_all => "cross-compiling and make not available")
     : ();
-plan tests => 4 + $CLEANUP + @INSTDIRS * (15 + $CLEANUP);
+plan tests => 4 + $CLEANUP + @INSTDIRS * (13 + $CLEANUP);
 
 my $Is_VMS = $^O eq 'VMS';
 
@@ -71,7 +71,6 @@ for my $instdir (@INSTDIRS) {
     ("$instdir/lib/perl5/Big/Dummy.pm",
      "$instdir/lib/perl5/Big/Liar.pm",
      "$instdir/bin/program",
-     "$instdir/lib/perl5/$Config{archname}/perllocal.pod",
      "$instdir/lib/perl5/$Config{archname}/auto/Big/Dummy/.packlist"
     );
 
