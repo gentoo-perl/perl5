@@ -24,7 +24,7 @@ use Test::More;
 use ExtUtils::MM;
 plan !MM->can_run(make()) && $ENV{PERL_CORE} && $Config{'usecrosscompile'}
     ? (skip_all => "cross-compiling and make not available")
-    : (tests => 171);
+    : (tests => 167);
 use File::Find;
 use File::Spec;
 use File::Path;
@@ -180,7 +180,6 @@ sub check_dummy_inst {
     ok( $files{'dummy.pm'},     '  Dummy.pm installed' );
     ok( $files{'liar.pm'},      '  Liar.pm installed'  );
     ok( $files{'program'},      '  program installed'  );
-    ok( $files{'.packlist'},    '  packlist created'   );
     ok( $files{'perllocal.pod'},'  perllocal.pod created' );
     \%files;
 }

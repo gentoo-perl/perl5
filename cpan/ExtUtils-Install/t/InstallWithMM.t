@@ -20,7 +20,7 @@ BEGIN {
 	plan skip_all => "make isn't available";
     }
     else {
-	plan tests => 15;
+	plan tests => 13;
     }
 }
 
@@ -80,7 +80,6 @@ delete @ENV{qw(PREFIX LIB MAKEFLAGS)};
     my $install_out = run($make_install_verbinst);
     is( $?, 0, 'install' ) || diag $install_out;
     like( $install_out, qr/^Installing /m );
-    like( $install_out, qr/^Writing /m );
 
     ok( -r '../dummy-install',     '  install dir created' );
     my %files = ();
@@ -96,6 +95,5 @@ delete @ENV{qw(PREFIX LIB MAKEFLAGS)};
     ok( $files{'dummy.pm'},     '  Dummy.pm installed' );
     ok( $files{'liar.pm'},      '  Liar.pm installed'  );
     ok( $files{'program'},      '  program installed'  );
-    ok( $files{'.packlist'},    '  packlist created'   );
     ok( $files{'perllocal.pod'},'  perllocal.pod created' );
 }

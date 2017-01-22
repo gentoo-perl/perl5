@@ -20,7 +20,7 @@ use Config;
 use ExtUtils::MM;
 plan !MM->can_run(make()) && $ENV{PERL_CORE} && $Config{'usecrosscompile'}
     ? (skip_all => "cross-compiling and make not available")
-    : (tests => 3 + $CLEANUP + @INSTDIRS * (15 + $CLEANUP));
+    : (tests => 3 + $CLEANUP + @INSTDIRS * (11 + $CLEANUP));
 
 my $Is_VMS = $^O eq 'VMS';
 
@@ -63,9 +63,7 @@ for my $instdir (@INSTDIRS) {
   my @installed_files =
     ("$instdir/lib/perl5/Big/Dummy.pm",
      "$instdir/lib/perl5/Big/Liar.pm",
-     "$instdir/bin/program",
-     "$instdir/lib/perl5/$Config{archname}/perllocal.pod",
-     "$instdir/lib/perl5/$Config{archname}/auto/Big/Dummy/.packlist"
+     "$instdir/bin/program"
     );
 
   foreach my $file (@installed_files) {
