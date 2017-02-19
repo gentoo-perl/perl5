@@ -74,6 +74,10 @@
 #  define AT_LEAST_ZLIB_1_2_8
 #endif
 
+#if  defined(ZLIB_VERNUM) && ZLIB_VERNUM >= 0x1290
+#  define AT_LEAST_ZLIB_1_2_9
+#endif
+
 #ifdef USE_PPPORT_H
 #  define NEED_sv_2pvbyte
 #  define NEED_sv_2pv_nolen
@@ -134,12 +138,13 @@ typedef struct di_stream {
     uLong    dict_adler ;
     int      last_error ;
     bool     zip_mode ;
-#define SETP_BYTE
+/* #define SETP_BYTE */
 #ifdef SETP_BYTE
+    /* SETP_BYTE only works with zlib up to 1.2.8 */
     bool     deflateParams_out_valid ;
     Bytef    deflateParams_out_byte;
 #else
-#define deflateParams_BUFFER_SIZE       0x4000
+#define deflateParams_BUFFER_SIZE       0x40000
     uLong    deflateParams_out_length;
     Bytef*   deflateParams_out_buffer;
 #endif
@@ -635,6 +640,103 @@ char * string ;
     return sv ;
 }
 
+#if 0
+int
+flushToBuffer(di_stream* s, int flush)
+{
+    dTHX;
+    int ret ;
+    z_stream * strm = &s->stream;
+
+    Bytef* output = s->deflateParams_out_buffer ;
+
+    strm->next_in = NULL;
+    strm->avail_in = 0;
+    
+    uLong total_output = 0;
+    uLong have = 0;
+
+    do 
+    {
+        if (output)
+            output = (unsigned char *)saferealloc(output, total_output + s->bufsize);
+        else
+            output = (unsigned char *)safemalloc(s->bufsize);
+
+        strm->next_out  = output + total_output;
+        strm->avail_out = s->bufsize;
+
+        ret = deflate(strm, flush);    /* no bad return value */
+        //assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+        if(ret == Z_STREAM_ERROR)
+        {
+            safefree(output);
+            return ret;
+        }
+        have = s->bufsize - strm->avail_out;
+        total_output += have;
+
+        //fprintf(stderr, "FLUSH %s %d, return %d\n", flush_flags[flush], have, ret);
+
+    } while (strm->avail_out == 0);
+
+    s->deflateParams_out_buffer = output;
+    s->deflateParams_out_length = total_output; 
+
+    return Z_OK;
+}
+#endif
+
+#ifndef SETP_BYTE
+int
+flushParams(di_stream* s)
+{
+    dTHX;
+    int ret ;
+    z_stream * strm = &s->stream;
+
+    Bytef* output = s->deflateParams_out_buffer ;
+    uLong total_output = s->deflateParams_out_length;
+
+    uLong have = 0;
+
+    strm->next_in = NULL;
+    strm->avail_in = 0;
+    
+    do 
+    {
+        if (output)
+            output = (unsigned char *)saferealloc(output, total_output + s->bufsize);
+        else
+            output = (unsigned char *)safemalloc(s->bufsize);
+
+        strm->next_out  = output + total_output;
+        strm->avail_out = s->bufsize;
+
+        ret = deflateParams(&(s->stream), s->Level, s->Strategy);
+        /* fprintf(stderr, "deflateParams %d %s %lu\n", ret,
+            GetErrorString(ret),  s->bufsize - strm->avail_out); */
+
+        if (ret == Z_STREAM_ERROR) 
+            break;
+
+        have = s->bufsize - strm->avail_out;
+        total_output += have;
+
+
+    } while (ret == Z_BUF_ERROR) ;
+
+    if(ret == Z_STREAM_ERROR)
+        safefree(output);
+    else 
+    {
+        s->deflateParams_out_buffer = output;
+        s->deflateParams_out_length = total_output; 
+    }
+
+    return ret;
+}
+#endif /* ! SETP_BYTE */
 
 #include "constants.h"
 
@@ -994,16 +1096,19 @@ deflate (s, buf, output)
         if (s->stream.avail_out < plen) {
             /*printf("GROW from %d to %d\n", s->stream.avail_out,
                         SvLEN(output) + plen - s->stream.avail_out); */
-            Sv_Grow(output, SvLEN(output) + plen - s->stream.avail_out) ;
+             s->stream.next_out = (Bytef*) Sv_Grow(output, SvLEN(output) + plen - s->stream.avail_out) ;
+             s->stream.next_out += cur_length;
         }
         
-        Copy(s->stream.next_out, s->deflateParams_out_buffer, plen, Bytef) ;	
-        cur_length = cur_length + plen;
+        Copy(s->deflateParams_out_buffer, s->stream.next_out, plen, Bytef) ;	
+        cur_length += plen;
         SvCUR_set(output, cur_length);
 	s->stream.next_out += plen ;
 	s->stream.avail_out = SvLEN(output) - cur_length ;
 	increment = s->stream.avail_out;
 	s->deflateParams_out_length = 0;
+        Safefree(s->deflateParams_out_buffer);
+        s->deflateParams_out_buffer = NULL;
     }
 #endif
     RETVAL = Z_OK ;
@@ -1079,7 +1184,6 @@ flush(s, output, f=Z_FINISH)
   CODE:
     bufinc = s->bufsize;
   
-    s->stream.avail_in = 0; /* should be zero already anyway */
   
     /* retrieve the output buffer */
     output = deRef_l(output, "flush") ;
@@ -1087,7 +1191,7 @@ flush(s, output, f=Z_FINISH)
     if (DO_UTF8(output) && !sv_utf8_downgrade(output, 1))
          croak("Wide character in Compress::Raw::Zlib::Deflate::flush input parameter");
 #endif         
-    if(! s->flags & FLAG_APPEND) {
+    if((s->flags & FLAG_APPEND) != FLAG_APPEND) {
         SvCUR_set(output, 0);
         /* sv_setpvn(output, "", 0); */
     }
@@ -1111,16 +1215,19 @@ flush(s, output, f=Z_FINISH)
         if (s->stream.avail_out < plen) {
             /* printf("GROW from %d to %d\n", s->stream.avail_out, 
                         SvLEN(output) + plen - s->stream.avail_out); */
-            Sv_Grow(output, SvLEN(output) + plen - s->stream.avail_out) ;
+            s->stream.next_out = (Bytef*) Sv_Grow(output, SvLEN(output) + plen - s->stream.avail_out) ;
+            s->stream.next_out += cur_length;
         }
         
-        Copy(s->stream.next_out, s->deflateParams_out_buffer, plen, Bytef) ;	
-        cur_length = cur_length + plen;
+        Copy(s->deflateParams_out_buffer, s->stream.next_out, plen, Bytef) ;	
+        cur_length += plen;
         SvCUR_set(output, cur_length);
 	s->stream.next_out += plen ;
 	s->stream.avail_out = SvLEN(output) - cur_length ;
 	increment = s->stream.avail_out;
 	s->deflateParams_out_length = 0;
+        Safefree(s->deflateParams_out_buffer);
+        s->deflateParams_out_buffer = NULL;
     }
 #endif
 
@@ -1183,17 +1290,21 @@ _deflateParams(s, flags, level, strategy, bufsize)
 	int	level
 	int	strategy
     	uLong	bufsize
+	bool changed = FALSE;
     CODE:
-	/* printf("_deflateParams(Flags %d Level %d Strategy %d Bufsize %d)\n", flags, level, strategy, bufsize); 
-	printf("Before -- Level %d, Strategy %d, Bufsize %d\n", s->Level, s->Strategy, s->bufsize); */
-	if (flags & 1)
-	    s->Level = level ;
-	if (flags & 2)
-	    s->Strategy = strategy ;
-        if (flags & 4) {
+        /* printf("_deflateParams(Flags %d Level %d Strategy %d Bufsize %d)\n", flags, level, strategy, bufsize); 
+        printf("Before -- Level %d, Strategy %d, Bufsize %d\n", s->Level, s->Strategy, s->bufsize); */
+        if (flags & 1 && level != s->Level) {
+            s->Level = level ;
+            changed = TRUE;
+        }
+        if (flags & 2 && strategy != s->Strategy) {
+            s->Strategy = strategy ;
+            changed = TRUE;
+        }
+        if (flags & 4)
             s->bufsize = bufsize; 
-	}
-	/* printf("After --  Level %d, Strategy %d, Bufsize %d\n", s->Level, s->Strategy, s->bufsize);*/
+        if (changed) {
 #ifdef SETP_BYTE
         s->stream.avail_in = 0; 
         s->stream.next_out = &(s->deflateParams_out_byte) ;
@@ -1205,17 +1316,11 @@ _deflateParams(s, flags, level, strategy, bufsize)
 #else
 	/* printf("Level %d Strategy %d, Prev Len %d\n", 
                 s->Level, s->Strategy, s->deflateParams_out_length); */
-        s->stream.avail_in = 0; 
-        if (s->deflateParams_out_buffer == NULL)
-            s->deflateParams_out_buffer = safemalloc(deflateParams_BUFFER_SIZE);
-        s->stream.next_out = s->deflateParams_out_buffer ;
-        s->stream.avail_out = deflateParams_BUFFER_SIZE;
-
-	RETVAL = deflateParams(&(s->stream), s->Level, s->Strategy);
-	s->deflateParams_out_length = deflateParams_BUFFER_SIZE - s->stream.avail_out;
-	/* printf("RETVAL %d, length out %d, avail %d\n", 
-                    RETVAL, s->deflateParams_out_length, s->stream.avail_out ); */
+            RETVAL = flushParams(s);
 #endif
+        }
+        else
+            RETVAL = Z_OK;
     OUTPUT:
 	RETVAL
 
