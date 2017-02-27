@@ -4,6 +4,10 @@ BEGIN {
 	@INC = ("../lib", "lib/compress");
     }
 }
+BEGIN {
+  print qq[1..0 # SKIP https://bugs.gentoo.org/606374\n];
+  exit 0;
+}
 
 use lib qw(t t/compress);
 use strict;
