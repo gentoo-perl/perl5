@@ -43,41 +43,10 @@ This prevents an attacker injecting an optional module into a process run by
 another user where the current directory is writable by the attacker, e.g. the
 F</tmp> directory.
 
-In most cases this removal should not cause problems, the exception being
-L<base>.
-
-L<base> treats every module name supplied as optional.  If you have
-applications that use L<base> to load non-optional modules from the current
-directory you will need to modify your code or environment.
-
-If your code always trusts the contents of the current directory, the simplest
-change is adding F<"."> to C<PERL5LIB>:
-
-  # for Bourne shell and similar
-  set PERL5LIB=.
-  export PERL5LIB
-
-If you do B<not> trust the current directory this will open your code up to
-attacks on any module load, not just optional modules.  You may want to add the
-absolute path of your application's module directory to C<PERL5LIB> instead.
-
-Alternatively, you can change your code, either to add the directory with your
-binary to C<@INC>:
-
-  use FindBin;
-  use lib $FindBin::Bin;
-
-or switch to L<parent>, which requires an explicit parameter for optional
-modules:
-
-  use parent 'Nonoptional::Module';
-
-though this will have the same problem if the current directory is removed from
-C<@INC> in Perl 5.26.
-
-Also, since L<base> now localizes C<@INC> when loading modules, changes to
-C<@INC> in the loaded module will be discarded when C<@INC> is restored to its
-previous value.
+In most cases this removal should not cause problems, but difficulties were
+encountered with L<base>, which treats every module name supplied as optional.
+These difficulties have not yet been resolved, so for this release there are no
+changes to L<base>.  We hope to have a fix for L<base> in Perl 5.22.4.
 
 To protect your own code from this attack, either remove the default F<".">
 entry from C<@INC> at the start of your script, so:
@@ -120,10 +89,6 @@ that you submit a report.  See L</Reporting Bugs> below.
 =item *
 
 L<Archive::Tar> has been upgraded from version 2.04 to 2.04_01.
-
-=item *
-
-L<base> has been upgraded from version 2.22 to 2.22_01.
 
 =item *
 
@@ -195,7 +160,7 @@ L<Memoize> has been upgraded from version 1.03 to 1.03_01.
 
 =item *
 
-L<Module::CoreList> has been upgraded from version 5.20160429 to 5.20161019_22.
+L<Module::CoreList> has been upgraded from version 5.20160429 to 5.20170114_22.
 
 =item *
 
@@ -285,21 +250,21 @@ The C<PadlistNAMES> macro is an lvalue again.
 
 =head1 Acknowledgements
 
-Perl 5.22.3 represents approximately 5 months of development since Perl 5.22.2
-and contains approximately 4,000 lines of changes across 240 files from 18
+Perl 5.22.3 represents approximately 9 months of development since Perl 5.22.2
+and contains approximately 4,400 lines of changes across 240 files from 20
 authors.
 
 Excluding auto-generated files, documentation and release tools, there were
-approximately 1,900 lines of changes to 180 .pm, .t, .c and .h files.
+approximately 2,200 lines of changes to 170 .pm, .t, .c and .h files.
 
 Perl continues to flourish into its third decade thanks to a vibrant community
 of users and developers.  The following people are known to have contributed
 the improvements that became Perl 5.22.3:
 
-Abigail, Alex Vandiver, Aristotle Pagaltzis, Chris 'BinGOs' Williams, Craig A.
-Berry, David Mitchell, Father Chrysostomos, James E Keenan, Jarkko Hietaniemi,
-Karen Etheridge, Karl Williamson, Matthew Horsfall, Niko Tyni, Ricardo Signes,
-Sawyer X, Stevan Little, Steve Hay, Tony Cook.
+Aaron Crane, Abigail, Alex Vandiver, Aristotle Pagaltzis, Chad Granum, Chris
+'BinGOs' Williams, Craig A. Berry, David Mitchell, Father Chrysostomos, James E
+Keenan, Jarkko Hietaniemi, Karen Etheridge, Karl Williamson, Matthew Horsfall,
+Niko Tyni, Ricardo Signes, Sawyer X, Stevan Little, Steve Hay, Tony Cook.
 
 The list above is almost certainly incomplete as it is automatically generated
 from version control history.  In particular, it does not include the names of
