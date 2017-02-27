@@ -110,28 +110,6 @@ if test -d c:/. || ( uname -a | grep -i 'os\(/\|\)2' 2>&1 ) 2>&1 >/dev/null ; th
 	fi
 fi
 
-: Proper PATH setting
-paths='/bin /usr/bin /usr/local/bin /usr/ucb /usr/local /usr/lbin'
-paths="$paths /opt/bin /opt/local/bin /opt/local /opt/lbin"
-paths="$paths /usr/5bin /etc /usr/gnu/bin /usr/new /usr/new/bin /usr/nbin"
-paths="$paths /opt/gnu/bin /opt/new /opt/new/bin /opt/nbin"
-paths="$paths /sys5.3/bin /sys5.3/usr/bin /bsd4.3/bin /bsd4.3/usr/ucb"
-paths="$paths /bsd4.3/usr/bin /usr/bsd /bsd43/bin /opt/ansic/bin /usr/ccs/bin"
-paths="$paths /etc /usr/lib /usr/ucblib /lib /usr/ccs/lib"
-paths="$paths /sbin /usr/sbin /usr/libexec"
-paths="$paths /system/gnu_library/bin"
-
-for p in $paths
-do
-	case "$p_$PATH$p_" in
-	*$p_$p$p_*) ;;
-	*) test -d $p && PATH=$PATH$p_$p ;;
-	esac
-done
-
-PATH=.$p_$PATH
-export PATH
-
 : shall we be using ksh?
 inksh=''
 needksh=''
@@ -1425,8 +1403,7 @@ groupstype=''
 i_whoami=''
 : Possible local include directories to search.
 : Set locincpth to "" in a hint file to defeat local include searches.
-locincpth="/usr/local/include /opt/local/include /usr/gnu/include"
-locincpth="$locincpth /opt/gnu/include /usr/GNU/include /opt/GNU/include"
+locincpth=""
 :
 : no include file wanted by default
 inclwanted=''
@@ -1442,12 +1419,11 @@ libnames=''
 : change the next line if compiling for Xenix/286 on Xenix/386
 xlibpth='/usr/lib/386 /lib/386'
 : Possible local library directories to search.
-loclibpth="/usr/local/lib /opt/local/lib /usr/gnu/lib"
-loclibpth="$loclibpth /opt/gnu/lib /usr/GNU/lib /opt/GNU/lib"
+loclibpth=""
 
 : general looking path for locating libraries
 glibpth="/lib /usr/lib $xlibpth"
-glibpth="$glibpth /usr/ccs/lib /usr/ucblib /usr/local/lib"
+glibpth="$glibpth /usr/ccs/lib /usr/ucblib"
 test -f /usr/shlib/libc.so && glibpth="/usr/shlib $glibpth"
 test -f /shlib/libc.so     && glibpth="/shlib $glibpth"
 test -d /usr/lib64         && glibpth="$glibpth /lib64 /usr/lib64 /usr/local/lib64"
@@ -5031,7 +5007,7 @@ esac
 : Set private lib path
 case "$plibpth" in
 '') if ./mips; then
-	plibpth="$incpath/usr/lib $sysroot/usr/local/lib $sysroot/usr/ccs/lib"
+	plibpth="$incpath/usr/lib $sysroot/usr/ccs/lib"
     fi;;
 esac
 case "$libpth" in
@@ -5474,23 +5450,6 @@ default|recommended)
 	# is to add the flag to the flags passed to the compiler at link time,
 	# as that way the compiler can do the right implementation dependant
 	# thing. (NWC)
-	case "$osname" in
-	amigaos) ;; # -fstack-protector builds but doesn't work
-	*)	case "$gccversion" in
-		?*)	set stack-protector-strong -fstack-protector-strong
-			eval $checkccflag
-			case "$dflt" in
-			*-fstack-protector-strong*) ;; # It got added.
-			*) # Try the plain/older -fstack-protector.
-			   set stack-protector -fstack-protector
-			   eval $checkccflag
-			   ;;
-			esac
-			;;
-		esac
-		;;
-	esac
-	;;
 esac
 
 case "$mips_type" in
@@ -5632,21 +5591,6 @@ case "$ldflags" in
 	esac
 	;;
 *) dflt="$ldflags";;
-esac
-# See note above about -fstack-protector
-case "$ccflags" in
-*-fstack-protector-strong*)
-	case "$dflt" in
-	*-fstack-protector-strong*) ;; # Don't add it again
-	*) dflt="$dflt -fstack-protector-strong" ;;
-	esac
-	;;
-*-fstack-protector*)
-	case "$dflt" in
-	*-fstack-protector*) ;; # Don't add it again
-	*) dflt="$dflt -fstack-protector" ;;
-	esac
-	;;
 esac
 
 : Try to guess additional flags to pick up local libraries.
@@ -8570,21 +8514,6 @@ EOM
 	    ''|' ') dflt='none' ;;
 	esac
 
-	case "$ldflags" in
-	    *-fstack-protector-strong*)
-		case "$dflt" in
-		    *-fstack-protector-strong*) ;; # Don't add it again
-		    *) dflt="$dflt -fstack-protector-strong" ;;
-		esac
-		;;
-	    *-fstack-protector*)
-		case "$dflt" in
-		    *-fstack-protector*) ;; # Don't add it again
-		    *) dflt="$dflt -fstack-protector" ;;
-		esac
-		;;
-	esac
-
 	rp="Any special flags to pass to $ld to create a dynamically loaded library?"
 	. ./myread
 	case "$ans" in
@@ -8795,57 +8724,6 @@ EOM
 	;;
 esac
 
-# How will the perl executable find the installed shared $libperl?
-# Add $xxx to ccdlflags.
-# If we can't figure out a command-line option, use $shrpenv to
-# set env LD_RUN_PATH.  The main perl makefile uses this.
-shrpdir=$archlibexp/CORE
-xxx=''
-tmp_shrpenv=''
-if "$useshrplib"; then
-    case "$osname" in
-	aix)
-		# We'll set it in Makefile.SH...
-		;;
-	solaris)
-		xxx="-R $shrpdir"
-		;;
-	freebsd|mirbsd|netbsd|openbsd|interix|dragonfly|bitrig)
-		xxx="-Wl,-R$shrpdir"
-		;;
-	bsdos|linux|irix*|dec_osf|gnu*|haiku)
-		xxx="-Wl,-rpath,$shrpdir"
-		;;
-	hpux*)
-		# hpux doesn't like the default, either.
-		tmp_shrpenv="env LDOPTS=\"+s +b${shrpdir}\""
-		;;
-	cygwin)
-		# cygwin needs only ldlibpth
-		;;
-	*)
-		tmp_shrpenv="env LD_RUN_PATH=$shrpdir"
-		;;
-	esac
-	case "$xxx" in
-	'') ;;
-	*)
-		# Only add $xxx if it isn't already in ccdlflags.
-		case " $ccdlflags " in
-		*" $xxx "*)	;;
-		*)	ccdlflags="$ccdlflags $xxx"
-			cat <<EOM >&4
-
-Adding $xxx to the flags
-passed to $ld so that the perl executable will find the
-installed shared $libperl.
-
-EOM
-			;;
-		esac
-		;;
-	esac
-fi
 # Fix ccdlflags in AIX for building external extensions.
 # (For building Perl itself bare -bE:perl.exp is needed,
 #  Makefile.SH takes care of this.)
@@ -21798,7 +21676,7 @@ else
 	case "$ranlib" in
 	:) ranlib='';;
 	'')
-		ranlib=`./loc ranlib X /usr/bin /bin /usr/local/bin`
+		ranlib=`./loc ranlib X /usr/bin /bin`
 		$test -f $ranlib || ranlib=''
 		;;
 	esac
@@ -24964,8 +24842,8 @@ lkflags='$lkflags'
 ln='$ln'
 lns='$lns'
 localtime_r_proto='$localtime_r_proto'
-locincpth='$locincpth'
-loclibpth='$loclibpth'
+locincpth=''
+loclibpth=''
 longdblinfbytes='$longdblinfbytes'
 longdblkind='$longdblkind'
 longdblmantbits='$longdblmantbits'

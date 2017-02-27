@@ -2119,7 +2119,7 @@ doc__install : doc_site_install
 	$(NOECHO) $(ECHO) INSTALLDIRS not defined, defaulting to INSTALLDIRS=site
 
 pure_perl_install :: all
-	$(NOECHO) $(MOD_INSTALL) \
+	$(NOECHO) umask 022; $(MOD_INSTALL) \
 };
 
     push @m,
@@ -2139,7 +2139,7 @@ q{		"$(INST_LIB)" "$(DESTINSTALLPRIVLIB)" \
 
 
 pure_site_install :: all
-	$(NOECHO) $(MOD_INSTALL) \
+	$(NOECHO) umask 022; $(MOD_INSTALL) \
 };
     push @m,
 q{		read "}.$self->catfile('$(SITEARCHEXP)','auto','$(FULLEXT)','.packlist').q{" \
@@ -2157,7 +2157,7 @@ q{		"$(INST_LIB)" "$(DESTINSTALLSITELIB)" \
 		"}.$self->catdir('$(PERL_ARCHLIB)','auto','$(FULLEXT)').q{"
 
 pure_vendor_install :: all
-	$(NOECHO) $(MOD_INSTALL) \
+	$(NOECHO) umask 022; $(MOD_INSTALL) \
 };
     push @m,
 q{		read "}.$self->catfile('$(VENDORARCHEXP)','auto','$(FULLEXT)','.packlist').q{" \
@@ -2188,38 +2188,18 @@ doc_vendor_install :: all
 
     push @m, q{
 doc_perl_install :: all
-	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
-	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
-	-$(NOECHO) $(DOC_INSTALL) \
-		"Module" "$(NAME)" \
-		"installed into" $(INSTALLPRIVLIB) \
-		LINKTYPE "$(LINKTYPE)" \
-		VERSION "$(VERSION)" \
-		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
-
 doc_site_install :: all
 	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
-	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
-	-$(NOECHO) $(DOC_INSTALL) \
+	-$(NOECHO) umask 022; $(MKPATH) "$(DESTINSTALLARCHLIB)"
+	-$(NOECHO) umask 022; $(DOC_INSTALL) \
 		"Module" "$(NAME)" \
 		"installed into" $(INSTALLSITELIB) \
 		LINKTYPE "$(LINKTYPE)" \
 		VERSION "$(VERSION)" \
 		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
+		>> "}.$self->catfile('$(DESTINSTALLSITELIB)','perllocal.pod').q{"
 
 doc_vendor_install :: all
-	$(NOECHO) $(ECHO) Appending installation info to "$(DESTINSTALLARCHLIB)/perllocal.pod"
-	-$(NOECHO) $(MKPATH) "$(DESTINSTALLARCHLIB)"
-	-$(NOECHO) $(DOC_INSTALL) \
-		"Module" "$(NAME)" \
-		"installed into" $(INSTALLVENDORLIB) \
-		LINKTYPE "$(LINKTYPE)" \
-		VERSION "$(VERSION)" \
-		EXE_FILES "$(EXE_FILES)" \
-		>> "}.$self->catfile('$(DESTINSTALLARCHLIB)','perllocal.pod').q{"
-
 } unless $self->{NO_PERLLOCAL};
 
     push @m, q{
@@ -2823,7 +2803,7 @@ sub pasthru {
     my($sep) = $Is{VMS} ? ',' : '';
     $sep .= "\\\n\t";
 
-    foreach my $key (qw(LIB LIBPERL_A LINKTYPE OPTIMIZE
+    foreach my $key (qw(LIB LIBPERL_A LINKTYPE OPTIMIZE LD
                      PREFIX INSTALL_BASE)
                  )
     {

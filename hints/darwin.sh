@@ -145,7 +145,7 @@ if [ "X`echo | ${cc} -no-cpp-precomp -E - 2>&1 >/dev/null`" = "X" ]; then
 fi
 
 # Known optimizer problems.
-case "`cc -v 2>&1`" in
+case "`${cc:-gcc} -v 2>&1`" in
   *"3.1 20020105"*) toke_cflags='optimize=""' ;;
 esac
 
@@ -176,7 +176,7 @@ esac
 
 # Allow the user to override ld, but modify it as necessary below
 case "$ld" in
-    '') case "$cc" in
+    '') case "${cc:-gcc}" in
         # If the cc is explicitly something else than cc (or empty),
         # set the ld to be that explicitly something else.  Conversely,
         # if the cc is 'cc' (or empty), set the ld to be 'cc'.

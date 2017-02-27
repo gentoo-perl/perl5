@@ -1,0 +1,11 @@
+#!/bin/sh
+# remove -rpath (shared libperl is moved to /usr/lib by rules)
+tmp=
+for t in $ccdlflags ; do
+    case $t in
+        -Wl,-rpath,*) ;;
+        *) tmp="$tmp${tmp:+ }$t"
+    esac
+done
+ccdlflags="$tmp"
+lddlflags="$lddlflags $LDFLAGS"
