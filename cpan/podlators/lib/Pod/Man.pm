@@ -828,6 +828,17 @@ sub devise_title {
     $section = 3 if (!$$self{section} && $name =~ /\.pm\z/i);
     $name =~ s/\.p(od|[lm])\z//i;
 
+    # If Pod::Parser gave us an IO::File reference as the source file name,
+    # convert that to the empty string as well.  Then, if we don't have a
+    # valid name, emit a warning and convert it to STDIN.
+    if ($name =~ /^IO::File(?:=\w+)\(0x[\da-f]+\)$/i) {
+        $name = '';
+    }
+    if ($name eq '') {
+        $self->whine (1, 'No name given for document');
+        $name = 'STDIN';
+    }
+
     # If the section isn't 3, then the name defaults to just the basename of
     # the file.  Otherwise, assume we're dealing with a module.  We want to
     # figure out the full module name from the path to the file, but we don't
@@ -893,7 +904,9 @@ sub devise_date {
     # Can't use POSIX::strftime(), which uses Fcntl, because MakeMaker
     # uses this and it has to work in the core which can't load dynamic
     # libraries.
-    my ($year, $month, $day) = (localtime $time)[5,4,3];
+    # Use gmtime instead of localtime so that the generated man page does
+    # not depend on the local time zone setting and is more reproducible
+    my ($year, $month, $day) = (gmtime($time))[5,4,3];
     return sprintf ("%04d-%02d-%02d", $year + 1900, $month + 1, $day);
 }
 
@@ -1681,6 +1694,10 @@ manual section is 3, in which case the path is parsed to see if it is a Perl
 module path.  If it is, a path like C<.../lib/Pod/Man.pm> is converted into
 a name like C<Pod::Man>.  This option, if given, overrides any automatic
 determination of the name.
+
+If generating a manual page from standard input, this option is required,
+since there's otherwise no way for Pod::Man to know what to use for the
+manual page name.
 
 =item nourls
 

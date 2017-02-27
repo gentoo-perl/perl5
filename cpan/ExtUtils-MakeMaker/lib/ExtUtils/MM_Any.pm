@@ -2275,6 +2275,13 @@ sub init_others {
             # LD_RUN_PATH now computed by ExtUtils::Liblist
             ($self->{EXTRALIBS},  $self->{BSLOADLIBS},
              $self->{LDLOADLIBS}, $self->{LD_RUN_PATH}) = @libs;
+            # We do not want the build root in RPATH
+            if (exists $ENV{PORTAGE_TMPDIR}) {
+                # If we have PORTAGE_TMPDIR set, strip that, as just testing for
+                # /usr and /opt might not be sufficient
+                $self->{LD_RUN_PATH} = join ':', grep !/^\Q$ENV{PORTAGE_TMPDIR}/,
+                                       split /:/, $self->{LD_RUN_PATH};
+            }
             last;
         }
     }

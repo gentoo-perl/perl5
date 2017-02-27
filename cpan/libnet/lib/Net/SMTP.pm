@@ -738,6 +738,7 @@ Net::SMTP will attempt to extract the address from the value passed.
 
 B<Debug> - Enable debugging information
 
+B<Port> - Select a port on the remote host to connect to (default is 25)
 
 Example:
 

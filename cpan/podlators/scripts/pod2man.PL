@@ -174,9 +174,10 @@ Contributed Perl Documentation", but also see B<--official> below.
 
 =item B<-d> I<string>, B<--date>=I<string>
 
-Set the left-hand footer string to this value.  By default, the modification
-date of the input file will be used, or the current date if input comes from
-C<STDIN>.
+Set the left-hand footer string to this value.  By default, the
+modification date of the input file will be used, or the current date if
+input comes from C<STDIN>, and will be based on UTC (so that the output
+will be reproducible regardless of local time zone).
 
 =item B<-errors>=I<style>
 
@@ -234,6 +235,10 @@ automatic determination of the name.
 Note that this option is probably not useful when converting multiple POD
 files at once.  The convention for Unix man pages for commands is for the
 man page title to be in all-uppercase even if the command isn't.
+
+When converting POD source from standard input, this option is required,
+since there's otherwise no way to know what to use as the name of the
+manual page.
 
 =item B<--nourls>
 
@@ -383,8 +388,8 @@ B<pod2man> by Larry Wall and Tom Christiansen.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 1999, 2000, 2001, 2004, 2006, 2008, 2010, 2012, 2013 Russ
-Allbery <rra@stanford.edu>.
+Copyright 1999, 2000, 2001, 2004, 2006, 2008, 2010, 2012, 2013, 2014,
+2015 Russ Allbery <rra@cpan.org>.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

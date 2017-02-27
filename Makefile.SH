@@ -59,7 +59,7 @@ true)
 				${api_revision}.${api_version}.${api_subversion} \
 			     -current_version \
 				${revision}.${patchlevel}.${subversion} \
-			     -install_name \$(shrpdir)/\$@"
+			     -install_name \$(shrpdir)/libperl.${revision}.${patchlevel}.dylib"
 		;;
 	cygwin*)
 		shrpldflags="$shrpldflags -Wl,--out-implib=libperl.dll.a -Wl,--image-base,0x52000000"
@@ -67,22 +67,24 @@ true)
 		;;
 	sunos*)
 		linklibperl="-lperl"
+		shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
-	netbsd*|freebsd[234]*|openbsd*|dragonfly*|bitrig*)
+	netbsd*|freebsd*|openbsd*|dragonfly*|bitrig*)
 		linklibperl="-L. -lperl"
+		shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
 	interix*)
 		linklibperl="-L. -lperl"
-		shrpldflags="$shrpldflags -Wl,--image-base,0x57000000"
+		shrpldflags="$shrpldflags -Wl,--image-base,0x57000000 -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 		;;
 	aix*)
 		case "$cc" in
-		gcc*)
-			shrpldflags="-shared -Wl,-H512 -Wl,-T512 -Wl,-bhalt:4 -Wl,-bM:SRE -Wl,-bE:perl.exp"
+		*gcc*)
+			shrpldflags="-shared -Wl,-H512 -Wl,-T512 -Wl,-bhalt:4 -Wl,-bE:perl.exp"
 			case "$osvers" in
-			3*)	shrpldflags="$shrpldflags -e _nostart"
+			3*)	shrpldflags="$shrpldflags -Wl,-bM:SRE -e _nostart"
 				;;
-			*)	shrpldflags="$shrpldflags -Wl,-bnoentry"
+			*)	shrpldflags="$shrpldflags -Wl,-G -Wl,-bernotok -Wl,-bnoentry"
 				;;
 			esac
 			shrpldflags="$shrpldflags $ldflags $perllibs $cryptlib"
@@ -90,11 +92,11 @@ true)
 			linklibperl_nonshr='-lperl_nonshr'
 			;;
 		*)
-			shrpldflags="-H512 -T512 -bhalt:4 -bM:SRE -bE:perl.exp"
+			shrpldflags="-H512 -T512 -bhalt:4 -bE:perl.exp"
 			case "$osvers" in
-			3*)	shrpldflags="$shrpldflags -e _nostart"
+			3*)	shrpldflags="$shrpldflags -bM:SRE -e _nostart"
 				;;
-			*)	shrpldflags="$shrpldflags -b noentry"
+			*)	shrpldflags="$shrpldflags -G -bernotok -b noentry"
 				;;
 			esac
 			shrpldflags="$shrpldflags $ldflags $perllibs $cryptlib"
@@ -110,6 +112,9 @@ true)
             shrpldflags='-W l,XPLINK,dll'
 	    linklibperl='libperl.x'
 	    DPERL_EXTERNAL_GLOB=''
+	    ;;
+	linux*)
+	    shrpldflags="$shrpldflags -Wl,-soname -Wl,libperl.so.${revision}.${patchlevel}"
 	    ;;
 	esac
 	case "$ldlibpthname" in
@@ -836,11 +841,19 @@ $(LIBPERL): $& $(obj) $(DYNALOADER) $(LIBPERLEXPORT)
 !NO!SUBS!
 		case "$osname" in
 		aix)
-			$spitshell >>$Makefile <<'!NO!SUBS!'
-	rm -f libperl$(OBJ_EXT)
-	mv $@ libperl$(OBJ_EXT)
-	$(AR) qv $(LIBPERL) libperl$(OBJ_EXT)
-!NO!SUBS!
+			bits=32
+			if test X"$use64bitall" = Xdefine; then bits=64; fi
+			$spitshell >>$Makefile <<!GROK!THIS!
+	rm -f shr.imp shr.o
+	mv \$@ shr.o
+	strip -e shr.o
+	( echo '#! libperl.so.${revision}.${patchlevel}(shr.o)' \\
+	; echo '# ${bits}' \\
+	; grep -v '^#!' perl.exp \\
+	) > shr.imp
+	\$(AR) qv \$@ shr.imp shr.o
+	rm -f shr.imp shr.o
+!GROK!THIS!
 			;;
 		esac
 		;;
